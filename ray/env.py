@@ -24,23 +24,22 @@ logger = logging.getLogger(__name__)
 
 
 class Environment:
-    def __init__(self, env_config, seed):
-        self._env_config = env_config
+    def __init__(self, seed):
         self._env = None
         np.random.seed(seed)
         random.seed(seed)
 
-    def create_env(self, config, id=0) -> Simulator:
+    def create_env(self, env_config, env_id=0) -> Simulator:
         self._env = Simulator(
-            seed=self._env_config["seed"],
-            map_name=self._env_config["map_name"],
-            max_steps=self._env_config["max_steps"],
-            camera_width=self._env_config["camera_width"],
-            camera_height=self._env_config["camera_height"],
-            accept_start_angle_deg=self._env_config["accept_start_angle_deg"],
-            full_transparency=self._env_config["full_transparency"],
-            distortion=self._env_config["distortion"],
-            domain_rand=self._env_config["domain_rand"],
+            seed=env_config["seed"],
+            map_name=env_config["map_name"],
+            max_steps=env_config["max_steps"],
+            camera_width=env_config["camera_width"],
+            camera_height=env_config["camera_height"],
+            accept_start_angle_deg=env_config["accept_start_angle_deg"],
+            full_transparency=env_config["full_transparency"],
+            distortion=env_config["distortion"],
+            domain_rand=env_config["domain_rand"],
         )
         self._wrap()
         return self._env
@@ -60,3 +59,4 @@ class Environment:
         #self._env = DtRewardTargetOrientation(self._env)
         #self._env = DtRewardVelocity(self._env)
         #self._env = DtRewardCollisionAvoidance(self._env)
+

@@ -10,6 +10,11 @@ from pprint import pprint
 logger = logging.getLogger(__name__)
 
 
+def add_env_conf(conf, new_conf):
+    conf["env_config"] = new_conf
+    return conf
+
+
 def load_config(path: str = "./main.yaml"):
     # create base config
     config: dict = dict()
