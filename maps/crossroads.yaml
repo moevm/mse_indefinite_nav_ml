@@ -1,0 +1,10 @@
+# only crossroads (T-like, X-like)
+
+tiles:
+  - [curve_left/W , straight/W , 3way_left/W , straight/W , 3way_left/W , straight/W , curve_left/N]
+  - [straight/S   , floor      , straight/N  , floor      , straight/N  , floor      , straight/N]
+  - [3way_left/S  , straight/E , 4way        , straight/E , 4way        , straight/E , 3way_left/N]
+  - [straight/S   , floor      , straight/N  , floor      , straight/N  , floor      , straight/N]
+  - [curve_left/S , straight/E , 3way_left/E , straight/E , 3way_left/E , straight/E , curve_left/E]
+
+tile_size: 0.585
