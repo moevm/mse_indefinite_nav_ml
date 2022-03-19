@@ -9,7 +9,7 @@ from ray.rllib.agents.ppo import ppo
 from ray.rllib.agents.ppo import PPOTrainer
 import multiprocessing
 import torch
-from configs.api import update_conf, get_default_rllib_conf
+from configs.api import update_conf, get_default_rllib_conf, add_env_conf
 import random
 
 
