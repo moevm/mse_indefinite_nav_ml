@@ -11,6 +11,7 @@ try:
     from gym_duckietown.simulator import Simulator, DEFAULT_ROBOT_SPEED, DEFAULT_CAMERA_WIDTH, DEFAULT_CAMERA_HEIGHT
 except Exception:
     pass
+from ray.tune import register_env
 from wrappers.general_wrappers import InconvenientSpawnFixingWrapper
 from wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, SegmentationWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper, RGB2GrayscaleWrapper, LastPictureObsWrapper
 from wrappers.reward_wrappers import DtRewardTargetOrientation, DtRewardVelocity, DtRewardCollisionAvoidance, DtRewardPosingLaneWrapper, DtRewardPosAngle
@@ -60,3 +61,6 @@ class Environment:
         #self._env = DtRewardVelocity(self._env)
         #self._env = DtRewardCollisionAvoidance(self._env)
 
+
+env = Environment(random.randint(0, 100000))
+register_env('Duckietown', env.create_env)
