@@ -1,5 +1,6 @@
 import sys
 import ray
+import argparse
 from ray import tune
 import random
 from ray.tune import register_env
@@ -9,7 +10,11 @@ from utils.config import Config
 from env import Environment
 
 if __name__ == "__main__":
-    config = Config.fromfile('./configs/conf.py')
+    parser = argparse.ArgumentParser(description="Parameters to ray trainer")
+    parser.add_argument('--conf_path', type=str, default='./configs/conf.py')
+    args = parser.parse_args()
+
+    config = Config.fromfile(args.conf_path)
     env = Environment(random.randint(0, 100000))
     register_env('Duckietown', env.create_env)
     ray.init(**config['ray_init_config'])
