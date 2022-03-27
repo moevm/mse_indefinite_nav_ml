@@ -1,15 +1,17 @@
-from pyglet.window import key
 import sys
 import ray
 from ray import tune
+import random
+from ray.tune import register_env
 from ray.rllib.agents.ppo import PPOTrainer
 from utils.api import update_conf, get_default_rllib_conf, add_env_conf
 from utils.config import Config
-
+from env import Environment
 
 if __name__ == "__main__":
     config = Config.fromfile('./configs/conf.py')
-
+    env = Environment(random.randint(0, 100000))
+    register_env('Duckietown', env.create_env)
     ray.init(**config['ray_init_config'])
 
     rllib_config = get_default_rllib_conf()

@@ -2,7 +2,6 @@ ray[tune]
 ray[rllib]
 ray[serve]
 pyglet
-duckietown-gym-daffy
 seaborn
 torch==1.7.0
 torchvision==0.8.1

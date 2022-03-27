@@ -1,0 +1,8 @@
+version: "3.3"
+
+services:
+  ray-trainer:
+    build: ./
+    container_name: mse-ray-trainer
+    network_mode: "host"
+
