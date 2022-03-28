@@ -1,8 +1,9 @@
+
+import cv2
 from PIL import Image
 import argparse
 import sys
-import cv2
-import os
+
 import gym
 import numpy as np
 import pyglet
@@ -10,23 +11,127 @@ from pyglet.window import key
 
 from gym_duckietown.envs import DuckietownEnv
 
+STEP = 0
 
-if __name__ == "__main__":
-    env = DuckietownEnv(
-    seed=5123123,  # random seed
-        map_name="udem1",
-        max_steps=100,  # we don't want the gym to reset itself
-        camera_width=640,
-        camera_height=480,
-        full_transparency=True,
-        distortion=True,
-        domain_rand=False
-    )
-    for i in range(1000):
+parser = argparse.ArgumentParser()
+parser.add_argument("--env-name", default=None)
+parser.add_argument("--map-name", default="udem1")
+parser.add_argument("--distortion", default=False, action="store_true")
+parser.add_argument("--camera_rand", default=False, action="store_true")
+parser.add_argument("--draw-curve", action="store_true", help="draw the lane following curve")
+parser.add_argument("--draw-bbox", action="store_true", help="draw collision detection bounding boxes")
+parser.add_argument("--domain-rand", action="store_true", help="enable domain randomization")
+parser.add_argument("--dynamics_rand", action="store_true", help="enable dynamics randomization")
+parser.add_argument("--frame-skip", default=1, type=int, help="number of frames to skip")
+parser.add_argument("--seed", default=1, type=int, help="seed")
+args = parser.parse_args()
+
+env = DuckietownEnv(
+    seed=args.seed,
+    map_name=args.map_name,
+    draw_curve=args.draw_curve,
+    draw_bbox=args.draw_bbox,
+    domain_rand=args.domain_rand,
+    frame_skip=args.frame_skip,
+    distortion=args.distortion,
+    camera_rand=args.camera_rand,
+    dynamics_rand=args.dynamics_rand,
+)
+
+env.reset()
+env.render()
+
+
+@env.unwrapped.window.event
+def on_key_press(symbol, modifiers):
+    """
+    This handler processes keyboard commands that
+    control the simulation
+    """
+
+    if symbol == key.BACKSPACE or symbol == key.SLASH:
+        print("RESET")
+        env.reset()
         env.render()
-        action=(1.0,1.0) # your agent here (this takes random actions)
-        observation, reward, done, info = env.step(action)
-        cv2.imwrite(f"frames/frame_{i}.jpg", observation)
-        if done:
-            observation = env.reset()
-    env.close()
+    elif symbol == key.PAGEUP:
+        env.unwrapped.cam_angle[0] = 0
+    elif symbol == key.ESCAPE:
+        env.close()
+        sys.exit(0)
+
+    # Take a screenshot
+    # UNCOMMENT IF NEEDED - Skimage dependency
+    # elif symbol == key.RETURN:
+    #     print('saving screenshot')
+    #     img = env.render('rgb_array')
+    #     save_img('screenshot.png', img)
+
+
+# Register a keyboard handler
+key_handler = key.KeyStateHandler()
+env.unwrapped.window.push_handlers(key_handler)
+
+
+def update(dt):
+    global STEP
+    """
+    This function is called at every frame to handle
+    movement/stepping and redrawing
+    """
+    wheel_distance = 0.102
+    min_rad = 0.08
+
+    action = np.array([0.0, 0.0])
+
+    if key_handler[key.UP]:
+        action += np.array([0.44, 0.0])
+    if key_handler[key.DOWN]:
+        action -= np.array([0.44, 0])
+    if key_handler[key.LEFT]:
+        action += np.array([0, 1])
+    if key_handler[key.RIGHT]:
+        action -= np.array([0, 1])
+    if key_handler[key.SPACE]:
+        action = np.array([0, 0])
+
+    v1 = action[0]
+    v2 = action[1]
+    # Limit radius of curvature
+    if v1 == 0 or abs(v2 / v1) > (min_rad + wheel_distance / 2.0) / (min_rad - wheel_distance / 2.0):
+        # adjust velocities evenly such that condition is fulfilled
+        delta_v = (v2 - v1) / 2 - wheel_distance / (4 * min_rad) * (v1 + v2)
+        v1 += delta_v
+        v2 -= delta_v
+
+    action[0] = v1
+    action[1] = v2
+
+    # Speed boost
+    if key_handler[key.LSHIFT]:
+        action *= 1.5
+
+    obs, reward, done, info = env.step(action)
+    cv2.imwrite(f"frames/frame_{STEP}.jpg", obs)
+    STEP += 1
+    print("step_count = %s, reward=%.3f" % (env.unwrapped.step_count, reward))
+
+    if key_handler[key.RETURN]:
+
+        im = Image.fromarray(obs)
+
+        im.save("screen.png")
+
+    if done:
+        print("done!")
+        env.reset()
+        env.render()
+
+    env.render()
+
+
+pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
+
+# Enter main event loop
+pyglet.app.run()
+
+env.close()
