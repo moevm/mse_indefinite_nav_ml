@@ -116,11 +116,13 @@ def display_lines(frame, lines, line_color=(0, 255, 0), line_width=2):
     line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
     return line_image
 
-for i in range(520):
 
-	frame = cv2.imread(f"frames/frame_{i}.jpg")
-	lane_lines = detect_lane(frame)
-	lane_lines_image = display_lines(frame, lane_lines)
-	cv2.imshow("lane lines", lane_lines_image)
-	cv2.waitKey(50) 
-cv2.destroyAllWindows() 
+if __name__ == "__main__":
+
+    for i in range(520):
+        frame = cv2.imread(f"frames/frame_{i}.jpg")
+        lane_lines = detect_lane(frame)
+        lane_lines_image = display_lines(frame, lane_lines)
+        cv2.imshow("lane lines", lane_lines_image)
+        cv2.waitKey(50)
+    cv2.destroyAllWindows()
