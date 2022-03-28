@@ -17,4 +17,4 @@ RUN cd ../
 RUN pip3 install  --user --upgrade pip
 RUN pip3 install  --user -r requirements.txt
 
-CMD ["bash", "./train.sh"]
+CMD ["bash", "train.sh"]

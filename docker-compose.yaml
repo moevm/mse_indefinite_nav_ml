@@ -5,4 +5,16 @@ services:
     build: ./
     container_name: mse-ray-trainer
     network_mode: "host"
+    volumes:
+      - ray_data:/root/ray_results
+
+  ray-board:
+    build: tensorboard/.
+    restart: always
+    container_name: mse-ray-tensorboard
+    volumes:
+      - ray_data:/root/ray_results
+
+volumes:
+  ray_data:
 
