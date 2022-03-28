@@ -10,6 +10,7 @@ import pyglet
 from pyglet.window import key
 
 from gym_duckietown.envs import DuckietownEnv
+from markup_wrapper import MarkupWrapper
 
 STEP = 0
 
@@ -38,9 +39,10 @@ env = DuckietownEnv(
     dynamics_rand=args.dynamics_rand,
 )
 
+env = MarkupWrapper(env)
+
 env.reset()
 env.render()
-
 
 @env.unwrapped.window.event
 def on_key_press(symbol, modifiers):
