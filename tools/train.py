@@ -10,7 +10,7 @@ from ray.rllib.agents.ppo import PPOTrainer
 sys.path.append(osp.abspath('.'))
 from gym_custom.utils.api import update_conf, get_default_rllib_conf, add_env_conf
 from gym_custom.utils.config import Config
-from gym_custom.env import Environment
+import gym_custom.env
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parameters to ray trainer")

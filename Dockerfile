@@ -1,10 +1,6 @@
 FROM python:3.8
 
-COPY gym_custom ray
-COPY tools/train.py ray
-COPY tools/train.sh ray
-COPY configs ray
-COPY requirements.txt ray
+COPY . ray
 
 WORKDIR ray
 
@@ -22,4 +18,4 @@ RUN cd ../
 RUN pip3 install  --user --upgrade pip
 RUN pip3 install  --user -r requirements.txt
 
-CMD ["bash", "train.sh"]
+CMD ["bash", "./tools/train.sh"]
