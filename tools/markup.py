@@ -1,16 +1,18 @@
+import os
 
 import cv2
 from PIL import Image
 import argparse
 import sys
+import os.path as osp
 
-import gym
 import numpy as np
 import pyglet
 from pyglet.window import key
 
+sys.path.append(osp.abspath('.'))
 from gym_duckietown.envs import DuckietownEnv
-from markup_wrapper import MarkupWrapper
+from gym_custom.wrappers.markup_wrapper import MarkupWrapper
 
 STEP = 0
 
@@ -43,6 +45,10 @@ env = MarkupWrapper(env)
 
 env.reset()
 env.render()
+
+if not osp.exists('./frames'):
+    os.makedirs('./frames')
+
 
 @env.unwrapped.window.event
 def on_key_press(symbol, modifiers):

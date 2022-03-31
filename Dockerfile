@@ -4,6 +4,7 @@ COPY gym_custom ray
 COPY tools/train.py ray
 COPY tools/train.sh ray
 COPY configs ray
+COPY requirements.txt ray
 
 WORKDIR ray
 

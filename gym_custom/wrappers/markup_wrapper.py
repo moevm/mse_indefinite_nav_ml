@@ -2,7 +2,8 @@ import cv2
 import gym
 import numpy as np
 from gym import spaces
-import vis
+
+import gym_custom.utils.markup_utils.vis as vis
 
 class MarkupWrapper(gym.ObservationWrapper):
     def __init__(self, env=None):

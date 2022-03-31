@@ -5,7 +5,6 @@ import argparse
 import random
 
 from ray import tune
-from ray.tune import register_env
 from ray.rllib.agents.ppo import PPOTrainer
 
 sys.path.append(osp.abspath('.'))
@@ -19,8 +18,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = Config.fromfile(args.conf_path)
-    env = Environment(random.randint(0, 100000))
-    register_env('Duckietown', env.create_env)
     ray.init(**config['ray_init_config'])
 
     rllib_config = get_default_rllib_conf()

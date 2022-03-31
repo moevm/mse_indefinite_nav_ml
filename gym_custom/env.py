@@ -17,6 +17,9 @@ from .wrappers.action_wpappers import Heading2WheelVelsWrapper, ActionSmoothingW
 from .wrappers.envWrapper import ActionDelayWrapper, ForwardObstacleSpawnnigWrapper, ObstacleSpawningWrapper
 from .wrappers.aido_wrapper import AIDOWrapper
 
+from ray.tune import register_env
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,3 +59,8 @@ class Environment:
         #self._env = DtRewardTargetOrientation(self._env)
         #self._env = DtRewardVelocity(self._env)
         #self._env = DtRewardCollisionAvoidance(self._env)
+
+
+
+env = Environment(random.randint(0, 100000))
+register_env('Duckietown', env.create_env)
