@@ -1,0 +1,21 @@
+version: "3.3"
+
+services:
+  ray-trainer:
+    build: ./
+    container_name: mse-ray-trainer
+    network_mode: "host"
+    volumes:
+      - ray_data:/root/ray_results
+
+  ray-board:
+    build: tensorboard/.
+    restart: always
+    network_mode: "host"
+    container_name: mse-ray-tensorboard
+    volumes:
+      - ray_data:/root/ray_results
+
+volumes:
+  ray_data:
+
