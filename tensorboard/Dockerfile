@@ -4,6 +4,5 @@ RUN pip3 install  --user --upgrade pip
 RUN pip3 install  --user tensorflow
 RUN pip3 install --user tensorboard
 
-COPY test test
-WORKDIR test
+COPY run_tensorboard.sh .
 CMD ["bash", "run_tensorboard.sh"]

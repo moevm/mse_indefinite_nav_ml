@@ -11,6 +11,7 @@ services:
   ray-board:
     build: tensorboard/.
     restart: always
+    network_mode: "host"
     container_name: mse-ray-tensorboard
     volumes:
       - ray_data:/root/ray_results
