@@ -1,26 +1,24 @@
-try:
-    import pyglet
-    pyglet.window.Window()
-    from pyglet.window import key
-except Exception:
-    pass
+import pyglet
+
+pyglet.window.Window()
+from pyglet.window import key
 
 import logging
 import sys
-
-try:
-    from gym_duckietown.simulator import Simulator, DEFAULT_ROBOT_SPEED, DEFAULT_CAMERA_WIDTH, DEFAULT_CAMERA_HEIGHT
-except Exception:
-    pass
-
-from wrappers.general_wrappers import InconvenientSpawnFixingWrapper
-from wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, SegmentationWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper, RGB2GrayscaleWrapper, LastPictureObsWrapper
-from wrappers.reward_wrappers import DtRewardTargetOrientation, DtRewardVelocity, DtRewardCollisionAvoidance, DtRewardPosingLaneWrapper, DtRewardPosAngle
-from wrappers.action_wpappers import Heading2WheelVelsWrapper, ActionSmoothingWrapper
-from wrappers.envWrapper import ActionDelayWrapper, ForwardObstacleSpawnnigWrapper, ObstacleSpawningWrapper, TileWrapper
-from wrappers.aido_wrapper import AIDOWrapper
 import random
 import numpy as np
+
+from gym_duckietown.simulator import Simulator, DEFAULT_ROBOT_SPEED, DEFAULT_CAMERA_WIDTH, DEFAULT_CAMERA_HEIGHT
+
+from .wrappers.general_wrappers import InconvenientSpawnFixingWrapper
+from .wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, SegmentationWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper, RGB2GrayscaleWrapper, LastPictureObsWrapper
+from .wrappers.reward_wrappers import DtRewardTargetOrientation, DtRewardVelocity, DtRewardCollisionAvoidance, DtRewardPosingLaneWrapper, DtRewardPosAngle
+from .wrappers.action_wpappers import Heading2WheelVelsWrapper, ActionSmoothingWrapper
+from .wrappers.envWrapper import ActionDelayWrapper, ForwardObstacleSpawnnigWrapper, ObstacleSpawningWrapper, TileWrapper
+from .wrappers.aido_wrapper import AIDOWrapper
+
+from ray.tune import register_env
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +55,13 @@ class Environment:
         self._env = MotionBlurWrapper(self._env)
         self._env = NormalizeWrapper(self._env)
         self._env = Heading2WheelVelsWrapper(self._env)
-        self._env = TileWrapper(self._env)
         #self._env = ActionSmoothingWrapper(self._env)
         #self._env = DtRewardTargetOrientation(self._env)
         #self._env = DtRewardVelocity(self._env)
         #self._env = DtRewardCollisionAvoidance(self._env)
+        self._env = TileWrapper(self._env)
+
+
+
+env = Environment(random.randint(0, 100000))
+register_env('Duckietown', env.create_env)
