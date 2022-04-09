@@ -49,7 +49,7 @@ class Environment:
         #self._env = ActionDelayWrapper(self._env)
         self._env = ClipImageWrapper(self._env, 3)
         #self._env = RGB2GrayscaleWrapper(self._env)
-        self._env = ResizeWrapper(self._env, (84, 84))
+        self._env = ResizeWrapper(self._env, (64, 64))
         #self._env = RandomFrameRepeatingWrapper(self._env)
         #self._env = ObservationBufferWrapper(self._env)
         self._env = MotionBlurWrapper(self._env)

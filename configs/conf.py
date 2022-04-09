@@ -16,6 +16,9 @@ ray_sys_conf = {
     "gpus_per_worker": torch.cuda.device_count(),
     "env_per_worker": 1,
     "framework": "torch",
+    "model": {
+      "custom_model": "custom_torch_model"
+    },
     "lr": 0.0001,
 }
 
