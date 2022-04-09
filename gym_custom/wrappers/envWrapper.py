@@ -398,10 +398,10 @@ class TileWrapper(gym.Wrapper):
     def __init__(self, env):
        super(TileWrapper, self).__init__(env)
     
-    def gettile(self, tile_coords):
+    def gettile(self, tile_coords:list):
         return self.env.unwrapped._get_tile(tile_coords[0], tile_coords[1])
         
-    def next_tile(self, tc, pos, phi):
+    def next_tile(self, tc:list, pos:list, phi:float):
         cons_next = []	# Рассматриваемые тайлы
         crossroads = ['3way_left', '4way']
         
@@ -412,12 +412,12 @@ class TileWrapper(gym.Wrapper):
         tcx = tc[0] + dx
         tcy = tc[1] + dy
         
-        if sin(phi) == 0 or cos(phi) == 0: # Если взгляд перпендикулярен тайлу
-            cons_next.append( [tc[0] + dx, tc[1] + dy] )
+        if dy == 0 or dx == 0: # Если взгляд перпендикулярен тайлу
+            cons_next.append( [tcx, tcy] )
         else:	# Сравнение углов, чтобы выбрать нужный тайл
             # Соотношение сторон прямоугольника, в который попадает луч взгляда
-            tga = ( (2*int(cos(phi) < 0) - 1)*(tc[1] + int(phi < 0)) + (2*int(cos(phi) > 0) - 1)*pos[2] )\
-            / ( (2*int(cos(phi) > 0) - 1)*(tc[0] + int(cos(phi) > 0)) + (2*int(cos(phi) < 0) - 1)*pos[0] )
+            tga = ( -dx*(tc[1] + int(dy > 0)) + dx*pos[2] )\
+            / ( dx*(tc[0] + int(dx > 0)) -dx*pos[0] )
             
             if atphi < abs(tga):
                 cons_next.append( [tcx, tc[1]] )
@@ -442,3 +442,9 @@ class TileWrapper(gym.Wrapper):
                 return tile2['kind']
             return None
         return None
+    
+    def step(self, action: np.ndarray) -> tuple:
+        obs, reward, done, info = super(TileWrapper, self).step(action)
+        info["Simulator"]["next_crossroad"] = self.next_tile(info["Simulator"]["tile_coords"], info["Simulator"]["cur_pos"], info["Simulator"]["cur_angle"])
+        return obs, reward, done, info
+        

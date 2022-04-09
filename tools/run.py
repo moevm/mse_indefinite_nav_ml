@@ -42,9 +42,8 @@ if __name__ == "__main__":
             print(f"{c}. {action}")
             c += 1
             obs, reward, done, info = env.step(action)
-            ntl = env.next_tile(info["Simulator"]["tile_coords"], info["Simulator"]["cur_pos"], info["Simulator"]["cur_angle"])
-            if ntl:
-                print(c, ntl)
+            if info["Simulator"]["next_crossroad"]:
+                print(c, info["Simulator"]["next_crossroad"])
             env.render()
 
 
