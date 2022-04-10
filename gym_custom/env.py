@@ -11,7 +11,7 @@ import numpy as np
 from gym_duckietown.simulator import Simulator, DEFAULT_ROBOT_SPEED, DEFAULT_CAMERA_WIDTH, DEFAULT_CAMERA_HEIGHT
 
 from .wrappers.general_wrappers import InconvenientSpawnFixingWrapper
-from .wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, SegmentationWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper, RGB2GrayscaleWrapper, LastPictureObsWrapper
+from .wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, SegmentationWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper, RGB2GrayscaleWrapper, LastPictureObsWrapper, ReshapeWrapper
 from .wrappers.reward_wrappers import DtRewardTargetOrientation, DtRewardVelocity, DtRewardCollisionAvoidance, DtRewardPosingLaneWrapper, DtRewardPosAngle
 from .wrappers.action_wpappers import Heading2WheelVelsWrapper, ActionSmoothingWrapper
 from .wrappers.envWrapper import ActionDelayWrapper, ForwardObstacleSpawnnigWrapper, ObstacleSpawningWrapper
@@ -54,6 +54,7 @@ class Environment:
         #self._env = ObservationBufferWrapper(self._env)
         self._env = MotionBlurWrapper(self._env)
         self._env = NormalizeWrapper(self._env)
+        self._env = ReshapeWrapper(self._env)
         self._env = Heading2WheelVelsWrapper(self._env)
         #self._env = ActionSmoothingWrapper(self._env)
         #self._env = DtRewardTargetOrientation(self._env)

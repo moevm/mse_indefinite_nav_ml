@@ -23,27 +23,40 @@ class CustomModel(TorchModelV2, nn.Module):
             self, obs_space, action_space, num_outputs, model_config, name
         )
         nn.Module.__init__(self)
-        layers = [Conv(3, 2, nn.ReLU(), nn.MaxPool2d(kernel_size=2), kernel_size=5, padding=2),
-                  Conv(2, 12, nn.ReLU(), nn.MaxPool2d(kernel_size=2), kernel_size=5, padding=2),
-                  Conv(12, 24, nn.ReLU(), nn.MaxPool2d(kernel_size=2), padding=2, kernel_size=5),
-                  Conv(24, 36, nn.ReLU(), nn.MaxPool2d(kernel_size=2), padding=2, kernel_size=5),
-                  Conv(36, 48, nn.ReLU(), nn.MaxPool2d(kernel_size=2), padding=2, kernel_size=5)]
+        conf = model_config['custom_model_config']
+        layers = []
+        for i in conf['conv']:
+            layers.append(Conv(i["in_channels"], i["out_channels"], i["activations"], i["pool"],
+                               kernel_size=i["kernel_size"], padding=i["padding"], stride=i["stride"]))
 
-        self._conv_layers = nn.Sequential(*layers)
-        layers = [Linear(192, 16, nn.ReLU()),
-                  Linear(16, num_outputs, nn.ReLU())]
+        self._hidden_layers = nn.Sequential(*layers)
+        layers.clear()
+        for i in conf['linear']:
+            layers.append(Linear(i["in"], i["out"], i['pool']))
         self._linear_layers = nn.Sequential(*layers)
         self._features = None
+        layers.clear()
+        for i in conf["value"]:
+            layers.append(Linear(i["in"], i["out"], i["pool"]))
+        self._value_layer = nn.Sequential(*layers)
 
     @override(TorchModelV2)
     def forward(self, input_dict: Dict[str, TensorType],
                 state: List[TensorType],
                 seq_lens: TensorType) -> (TensorType, List[TensorType]):
+
         obs = input_dict["obs_flat"].float()
+
         self._features = self._hidden_layers(obs)
         obs = self._features
-        obs = obs.view(obs.size(0), obs.size(1) * obs.size(2) * obs.size(3))
+        obs = obs.view(obs.size(0), -1)
         return self._linear_layers(obs), state
+
+    @override(TorchModelV2)
+    def value_function(self) -> TensorType:
+        x = self._features.view(self._features.size(0), -1)
+        value = self._value_layer(x)
+        return value.squeeze(1)
 
 
 ModelCatalog.register_custom_model("custom_torch_model", CustomModel)
