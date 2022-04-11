@@ -14,7 +14,7 @@ from .wrappers.general_wrappers import InconvenientSpawnFixingWrapper
 from .wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, SegmentationWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper, RGB2GrayscaleWrapper, LastPictureObsWrapper
 from .wrappers.reward_wrappers import DtRewardTargetOrientation, DtRewardVelocity, DtRewardCollisionAvoidance, DtRewardPosingLaneWrapper, DtRewardPosAngle
 from .wrappers.action_wpappers import Heading2WheelVelsWrapper, ActionSmoothingWrapper
-from .wrappers.envWrapper import ActionDelayWrapper, ForwardObstacleSpawnnigWrapper, ObstacleSpawningWrapper
+from .wrappers.envWrapper import ActionDelayWrapper, ForwardObstacleSpawnnigWrapper, ObstacleSpawningWrapper, TileWrapper
 from .wrappers.aido_wrapper import AIDOWrapper
 
 from ray.tune import register_env
@@ -59,6 +59,7 @@ class Environment:
         #self._env = DtRewardTargetOrientation(self._env)
         #self._env = DtRewardVelocity(self._env)
         #self._env = DtRewardCollisionAvoidance(self._env)
+        self._env = TileWrapper(self._env)
 
 
 
