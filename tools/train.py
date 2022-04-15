@@ -5,6 +5,7 @@ import argparse
 import random
 from ray import tune
 from ray.rllib.agents.ppo import PPOTrainer
+from gym_custom.trainer.trainer import CustomPPOTrainer
 import gym_custom.models.model
 sys.path.append(osp.abspath('.'))
 from gym_custom.utils.api import update_conf, get_default_rllib_conf, add_env_conf
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     conf = update_conf(rllib_config)
     conf = add_env_conf(conf, config['env_config'])
     tune.run(
-        PPOTrainer,
+        CustomPPOTrainer,
         stop={"timesteps_total": 2000000},
         checkpoint_at_end=True,
         config=conf,
