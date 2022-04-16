@@ -462,6 +462,7 @@ class TileWrapper(gym.Wrapper):
             return None
         return None
     
+
     def _directions(self, ppos: list, npos: list, nkind: str, cr_dir: int) -> list:
         if nkind != "3way_left":
             if nkind in self._moves.keys():
