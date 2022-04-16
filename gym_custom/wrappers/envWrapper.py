@@ -10,7 +10,7 @@ import gym
 import numpy as np
 import logging
 from gym_duckietown.simulator import Simulator
-
+from gym import spaces
 logger = logging.getLogger(__name__)
 
 
@@ -391,3 +391,20 @@ class ForwardObstacleSpawnnigWrapper(gym.Wrapper):
         if angle < 0:
             angle += 2 * np.pi
         return angle
+
+
+class PrepareLearningWrapper(gym.Wrapper):
+    def __init__(self, env=None):
+        super(PrepareLearningWrapper, self).__init__(env)
+        self.observation_space = spaces.Dict({"direction": spaces.Discrete(4), "view": self.observation_space})
+
+    def reset(self):
+        return {
+            "direction": 0,
+            "view": np.zeros((self.c, self.h, self.w), dtype=np.float32)
+        }
+
+    def step(self, action):
+        reward, obs, done, info = self.env.step(action)
+        return reward, {"direction": info["direction"], "view": obs}, done, info
+
