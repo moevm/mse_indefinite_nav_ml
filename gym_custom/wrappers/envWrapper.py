@@ -8,6 +8,8 @@ __copyright__ = "Copyright (c) 2020 András Kalapos"
 
 import gym
 import numpy as np
+from numpy import sign, sin, cos, tan
+from random import randint as ri
 import logging
 from gym_duckietown.simulator import Simulator
 from gym import spaces
@@ -405,6 +407,61 @@ class PrepareLearningWrapper(gym.Wrapper):
         }
 
     def step(self, action):
-        reward, obs, done, info = self.env.step(action)
-        return reward, {"direction": info["direction"], "view": obs}, done, info
+        obs, reward, done, info = self.env.step(action)
+        return  {"direction": info["direction"], "view": obs}, reward, done, info
 
+
+class TileWrapper(gym.Wrapper):
+    def __init__(self, env):
+       super(TileWrapper, self).__init__(env)
+    
+    def gettile(self, tile_coords:list):
+        return self.env.unwrapped._get_tile(tile_coords[0], tile_coords[1])
+        
+    def next_tile(self, tc:list, pos:list, phi:float):
+        cons_next = []	# Рассматриваемые тайлы
+        crossroads = ['3way_left', '4way']
+        
+        dx = sign(cos(phi))
+        dy = -sign(sin(phi))
+        atphi = abs(tan(phi))
+        
+        tcx = tc[0] + dx
+        tcy = tc[1] + dy
+        
+        if dy == 0 or dx == 0: # Если взгляд перпендикулярен тайлу
+            cons_next.append( [tcx, tcy] )
+        else:	# Сравнение углов, чтобы выбрать нужный тайл
+            # Соотношение сторон прямоугольника, в который попадает луч взгляда
+            tga = ( -dx*(tc[1] + int(dy > 0)) + dx*pos[2] )\
+            / ( dx*(tc[0] + int(dx > 0)) -dx*pos[0] )
+            
+            if atphi < abs(tga):
+                cons_next.append( [tcx, tc[1]] )
+            elif atphi > abs(tga):
+                cons_next.append( [tc[0], tcy] )
+            else:
+                if atphi <= 1:
+                    cons_next.append( [tcx, tc[1]] )
+                if atphi >= 1:
+                    cons_next.append( [tc[0], tcy] )
+        # Проверка тайлов на принадлежность перекрёсткам и выбор из двух тайлов (в случае неопределённости направления взгляда)
+        tile1 = self.gettile(cons_next[0])
+        if len(cons_next) == 1 and tile1 and tile1['kind'] in crossroads:
+            return self.gettile(cons_next[0])['kind']
+        if len(cons_next) > 1:
+            tile2 = self.gettile(cons_next[1])
+            if tile1 and tile1['kind'] in crossroads and tile2 and tile2['kind'] in crossroads:
+                return self.gettile(cons_next[ri(0,1)])['kind']
+            if tile1 and tile1['kind'] in crossroads:
+                return tile1['kind']
+            if tile2 and tile2['kind'] in crossroads:
+                return tile2['kind']
+            return None
+        return None
+    
+    def step(self, action: np.ndarray) -> tuple:
+        obs, reward, done, info = super(TileWrapper, self).step(action)
+        info["Simulator"]["next_crossroad"] = self.next_tile(info["Simulator"]["tile_coords"], info["Simulator"]["cur_pos"], info["Simulator"]["cur_angle"])
+        return obs, reward, done, info
+        

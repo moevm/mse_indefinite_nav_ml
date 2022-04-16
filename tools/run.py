@@ -42,6 +42,8 @@ if __name__ == "__main__":
             print(f"{c}. {action}")
             c += 1
             obs, reward, done, info = env.step(action)
+            if "next_crossroad" in info["Simulator"].keys() and info["Simulator"]["next_crossroad"]:
+                print(c, info["Simulator"]["next_crossroad"])
             env.render()
 
 
