@@ -401,7 +401,13 @@ class TileWrapper(gym.Wrapper):
        self._tile = None
        self._state = None
        
-       self._cr_dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]]
+       self._cr_dirs = ["south", "east", "north", "west"]
+       self._cr_vectors = {
+           "south": [0, 1],
+           "east": [1, 0],
+           "north": [0, -1],
+           "west": [-1, 0]
+           }
        
        self._dirs = {
            "laneFollowing": 0,
@@ -462,7 +468,6 @@ class TileWrapper(gym.Wrapper):
             return None
         return None
     
-
     def _directions(self, ppos: list, npos: list, nkind: str, cr_dir: int) -> list:
         if nkind != "3way_left":
             if nkind in self._moves.keys():
@@ -470,7 +475,7 @@ class TileWrapper(gym.Wrapper):
             return []
         
         v_bot = [ npos[0] - ppos[0], npos[1] - ppos[1] ]
-        v_cr = self._cr_dirs[cr_dir]
+        v_cr = self._cr_vectors[self._cr_dirs[cr_dir]]
         index = int(np.dot(v_bot, v_cr)) + 1
         return [ self._dirs[i] for i in self._moves[nkind][index] ]
     
