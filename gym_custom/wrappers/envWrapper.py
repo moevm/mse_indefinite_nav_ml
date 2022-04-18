@@ -397,6 +397,27 @@ class ForwardObstacleSpawnnigWrapper(gym.Wrapper):
 class TileWrapper(gym.Wrapper):
     def __init__(self, env):
        super(TileWrapper, self).__init__(env)
+       
+       self._cr_dirs = {
+           "N": [0, -1],
+           "E": [1, 0],
+           "S": [0, 1],
+           "W": [-1, 0]
+           }
+       
+       self._directions = {
+           "laneFollowing": 0,
+           "left": 1,
+           "forward": 2,
+           "right": 3
+           }
+       
+       self._moves = {
+           "curve_left": ["laneFollowing"],
+           "straight": ["laneFollowing"],
+           "4way": ["left", "forward", "right"],
+           "3way_left": [ ["forward", "right"], ["left", "right"], ["left", "forward"] ]
+           }
     
     def gettile(self, tile_coords:list):
         return self.env.unwrapped._get_tile(tile_coords[0], tile_coords[1])
@@ -442,6 +463,17 @@ class TileWrapper(gym.Wrapper):
                 return tile2['kind']
             return None
         return None
+    
+    def directions(ppos: list, npos: list, nkind: str, cr_dir: str) -> list:
+        if nkind != "3way_left":
+            if nkind in R.keys():
+                return [ self._directions[i] for i in self._moves[nkind] ]
+            return []
+        
+        v_bot = [ npos[0] - ppos[0], npos[1] - ppos[1] ]
+        v_cr = self._cr_dirs[cr_dir]
+        index = int(np.dot(v_bot, v_cr)) + 1
+        return [ self._directions[i] for i in self._moves[nkind][index] ]
     
     def step(self, action: np.ndarray) -> tuple:
         obs, reward, done, info = super(TileWrapper, self).step(action)
