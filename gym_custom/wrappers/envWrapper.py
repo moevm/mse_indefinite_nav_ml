@@ -13,6 +13,7 @@ from random import randint as ri
 import logging
 from gym_duckietown.simulator import Simulator
 from gym import spaces
+
 logger = logging.getLogger(__name__)
 
 
@@ -117,18 +118,18 @@ class ActionDelayWrapper(gym.Wrapper):
 
     def __init__(self, env):
         super(ActionDelayWrapper, self).__init__(env)
-        #self.env_config = env_config
+        # self.env_config = env_config
         self.simulator = self.unwrapped  # type: Simulator
-        #assert isinstance(self.simulator, Simulator), "Env must be gym_duckietown.simulator.Simulator"
+        # assert isinstance(self.simulator, Simulator), "Env must be gym_duckietown.simulator.Simulator"
 
-        #if env_config.get('action_delay_ratio', 0.) == "random":
+        # if env_config.get('action_delay_ratio', 0.) == "random":
         self.random_ratio = True
         self.ratio_distribution_range = (0.9, 0.95)
         self.action_delay_ratio = np.random.uniform(*self.ratio_distribution_range)
-        #else:
-            #self.random_ratio = False
-            #self.action_delay_ratio = env_config.get('action_delay_ratio', 0.)
-        #assert self.action_delay_ratio > 0.0 and self.action_delay_ratio < 1.0, "action_delay_ratio must be in the (0, 1) interval"
+        # else:
+        # self.random_ratio = False
+        # self.action_delay_ratio = env_config.get('action_delay_ratio', 0.)
+        # assert self.action_delay_ratio > 0.0 and self.action_delay_ratio < 1.0, "action_delay_ratio must be in the (0, 1) interval"
         self.last_action = np.zeros(self.action_space.shape)
 
     def step(self, action):
@@ -137,16 +138,16 @@ class ActionDelayWrapper(gym.Wrapper):
         for _ in range(self.simulator.frame_skip):
             # Passing delta time to update physics is not enough, _update_pos() uses the member variable delta_time
             self.simulator.delta_time = delta_time * self.action_delay_ratio
-            
+
             try:
                 self.simulator.update_physics(action=self.last_action, delta_time=None)
                 self.simulator.step_count -= 1
             except:
                 pass
-            
+
             # Update physics increments step count but that should ony be incremented once for each step
             # This will happen when self.env.step() is called
-            
+
         self.last_action = action
         self.simulator.delta_time = delta_time * (1. - self.action_delay_ratio)
         return self.env.step(action)
@@ -170,6 +171,7 @@ class InconvenientSpawnFixingWrapper(gym.Wrapper):
         ``gym_duckietown.simulator.Simulator.reset()`` is called in ``gym_duckietown.simulator.Simulator.__init__(...)``.
         **Simulator instantiation should also be wrapped in a similar while loop!!!**
     """
+
     def reset(self, **kwargs):
         spawn_successful = False
         spawn_attempts = 1
@@ -178,7 +180,7 @@ class InconvenientSpawnFixingWrapper(gym.Wrapper):
                 ret = self.env.reset(**kwargs)
                 spawn_successful = True
             except Exception as e:
-                self.unwrapped.seed_value += 1   # Otherwise it selects the same tile in the next attempt
+                self.unwrapped.seed_value += 1  # Otherwise it selects the same tile in the next attempt
                 self.unwrapped.seed(self.unwrapped.seed_value)
                 logger.error("{}; Retrying with new seed: {}".format(e, self.unwrapped.seed_value))
                 spawn_attempts += 1
@@ -207,13 +209,14 @@ class ObstacleSpawningWrapper(gym.Wrapper):
     def __init__(self, env):
         super(ObstacleSpawningWrapper, self).__init__(env)
         self.simulator = env.unwrapped  # type: Simulator
-        self.env_config = {'spawn_obstacles': True,'obstacles':{'duckie':{'density': 0.2, 'static': True},'duckiebot':{'density': 0,'static': False},},}
+        self.env_config = {'spawn_obstacles': True, 'obstacles': {'duckie': {'density': 0.2, 'static': True},
+                                                                  'duckiebot': {'density': 0, 'static': False}, }, }
         if self.env_config.get('spawn_obstacles', False):
             self.safe_spawn_objects()
 
     def reset(self, **kwargs):
-        #if self.env_config.get('spawn_obstacles', False):
-            #self.safe_spawn_objects()
+        # if self.env_config.get('spawn_obstacles', False):
+        # self.safe_spawn_objects()
         return self.env.reset(**kwargs)
 
     def safe_spawn_objects(self):
@@ -230,7 +233,7 @@ class ObstacleSpawningWrapper(gym.Wrapper):
         drivable_tiles = self.simulator.drivable_tiles
         # Get total obstacle count
         obstacle_cnt = 0
-        for kind, descriptor in self.env_config.get('obstacles',{}).items():
+        for kind, descriptor in self.env_config.get('obstacles', {}).items():
             obstacle_cnt += int(descriptor.get('density', 0) * len(drivable_tiles))
 
         # more than 1 object on a single tile is not allowed, because it can easily create unavoidable obstacles.
@@ -269,7 +272,7 @@ class ObstacleSpawningWrapper(gym.Wrapper):
             if obstacle_idx >= len(tiles):
                 break
         self.simulator._load_objects({'objects': obstacles})
-        #self.simulator.collidable_corners = np.zeros_like(self.simulator.collidable_corners) #BUGFIX in the simulator...
+        # self.simulator.collidable_corners = np.zeros_like(self.simulator.collidable_corners) #BUGFIX in the simulator...
 
     def _sample_tiles(self, drivable_tiles, size):
         """ Returns a list of simulator tiles, which are selected randomly without replacement.
@@ -286,14 +289,15 @@ class ForwardObstacleSpawnnigWrapper(gym.Wrapper):
                               'cone': 0.08,
                               'barrier': 0.08}
 
-                              
     def __init__(self, env):
-        
-        self.env_config = {'spawn_obstacles': True,'obstacles':{'duckie':{'density': 0, 'static': True},'duckiebot':{'density': 0.2,'static': False},},'spawn_forward_obstacle': True}
+
+        self.env_config = {'spawn_obstacles': True, 'obstacles': {'duckie': {'density': 0, 'static': True},
+                                                                  'duckiebot': {'density': 0.2, 'static': False}, },
+                           'spawn_forward_obstacle': True}
         super(ForwardObstacleSpawnnigWrapper, self).__init__(env)
         self.simulator = env.unwrapped
         self.lateral_pos_perturb_half_width = 0.2 * self.simulator.road_tile_size
-        self.orientation_perturb_half_width = np.pi/4
+        self.orientation_perturb_half_width = np.pi / 4
         if self.env_config.get('spawn_forward_obstacle', False):
             self.safe_spawn_objects()
 
@@ -310,7 +314,8 @@ class ForwardObstacleSpawnnigWrapper(gym.Wrapper):
         reset_good = False
         while not reset_good:
             ret = self.env.reset(**kwargs)
-            curve_point, curve_tangent = self.simulator.closest_curve_point(self.simulator.cur_pos, self.simulator.cur_angle)
+            curve_point, curve_tangent = self.simulator.closest_curve_point(self.simulator.cur_pos,
+                                                                            self.simulator.cur_angle)
             if curve_point is not None and curve_tangent is not None:
                 reset_good = True
             else:
@@ -325,7 +330,7 @@ class ForwardObstacleSpawnnigWrapper(gym.Wrapper):
         # obj_pose_valid = False
         # while not obj_pose_valid:
         # Get a random point in front of the vehicle
-        forward_dist = tile_size * (2. + 2*np.random.random())
+        forward_dist = tile_size * (2. + 2 * np.random.random())
         obj_pos, obj_pos_tangent = self.get_point_on_curve_ahead(forward_dist, self.simulator)
         # Randomise the lateral posotion of the obstacle
         right_normal_to_curve = np.array([obj_pos_tangent[2], 0, -obj_pos_tangent[0]])
@@ -408,43 +413,43 @@ class PrepareLearningWrapper(gym.Wrapper):
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
-        return  {"direction": info["direction"], "view": obs}, reward, done, info
+        return {"direction": info["direction"], "view": obs}, reward, done, info
 
 
 class TileWrapper(gym.Wrapper):
     def __init__(self, env):
-       super(TileWrapper, self).__init__(env)
-    
-    def gettile(self, tile_coords:list):
+        super(TileWrapper, self).__init__(env)
+
+    def gettile(self, tile_coords: list):
         return self.env.unwrapped._get_tile(tile_coords[0], tile_coords[1])
-        
-    def next_tile(self, tc:list, pos:list, phi:float):
-        cons_next = []	# Рассматриваемые тайлы
+
+    def next_tile(self, tc: list, pos: list, phi: float):
+        cons_next = []  # Рассматриваемые тайлы
         crossroads = ['3way_left', '4way']
-        
+
         dx = sign(cos(phi))
         dy = -sign(sin(phi))
         atphi = abs(tan(phi))
-        
+
         tcx = tc[0] + dx
         tcy = tc[1] + dy
-        
-        if dy == 0 or dx == 0: # Если взгляд перпендикулярен тайлу
-            cons_next.append( [tcx, tcy] )
-        else:	# Сравнение углов, чтобы выбрать нужный тайл
+
+        if dy == 0 or dx == 0:  # Если взгляд перпендикулярен тайлу
+            cons_next.append([tcx, tcy])
+        else:  # Сравнение углов, чтобы выбрать нужный тайл
             # Соотношение сторон прямоугольника, в который попадает луч взгляда
-            tga = ( -dx*(tc[1] + int(dy > 0)) + dx*pos[2] )\
-            / ( dx*(tc[0] + int(dx > 0)) -dx*pos[0] )
-            
+            tga = (-dx * (tc[1] + int(dy > 0)) + dx * pos[2]) \
+                  / (dx * (tc[0] + int(dx > 0)) - dx * pos[0])
+
             if atphi < abs(tga):
-                cons_next.append( [tcx, tc[1]] )
+                cons_next.append([tcx, tc[1]])
             elif atphi > abs(tga):
-                cons_next.append( [tc[0], tcy] )
+                cons_next.append([tc[0], tcy])
             else:
                 if atphi <= 1:
-                    cons_next.append( [tcx, tc[1]] )
+                    cons_next.append([tcx, tc[1]])
                 if atphi >= 1:
-                    cons_next.append( [tc[0], tcy] )
+                    cons_next.append([tc[0], tcy])
         # Проверка тайлов на принадлежность перекрёсткам и выбор из двух тайлов (в случае неопределённости направления взгляда)
         tile1 = self.gettile(cons_next[0])
         if len(cons_next) == 1 and tile1 and tile1['kind'] in crossroads:
@@ -452,16 +457,17 @@ class TileWrapper(gym.Wrapper):
         if len(cons_next) > 1:
             tile2 = self.gettile(cons_next[1])
             if tile1 and tile1['kind'] in crossroads and tile2 and tile2['kind'] in crossroads:
-                return self.gettile(cons_next[ri(0,1)])['kind']
+                return self.gettile(cons_next[ri(0, 1)])['kind']
             if tile1 and tile1['kind'] in crossroads:
                 return tile1['kind']
             if tile2 and tile2['kind'] in crossroads:
                 return tile2['kind']
             return None
         return None
-    
+
     def step(self, action: np.ndarray) -> tuple:
         obs, reward, done, info = super(TileWrapper, self).step(action)
-        info["Simulator"]["next_crossroad"] = self.next_tile(info["Simulator"]["tile_coords"], info["Simulator"]["cur_pos"], info["Simulator"]["cur_angle"])
+        info["Simulator"]["next_crossroad"] = self.next_tile(info["Simulator"]["tile_coords"],
+                                                             info["Simulator"]["cur_pos"],
+                                                             info["Simulator"]["cur_angle"])
         return obs, reward, done, info
-        

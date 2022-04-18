@@ -70,7 +70,7 @@ ray_sys_conf = {
             ],
             "linear": [
                 {
-                    "in": 192,
+                    "in": 196,
                     "out": 16,
                     "pool": torch.nn.ReLU(),
                 },

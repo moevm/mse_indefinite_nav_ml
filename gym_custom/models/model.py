@@ -56,15 +56,15 @@ class CustomModel(TorchModelV2, nn.Module):
         obs = obs["view"]
         self._features = self._hidden_layers(obs)
         obs = self._features
-        obs = obs.view(obs.size(0), -1)
+        one_hot_direction = torch.nn.functional.one_hot(self.direction, self.num_of_directions).squeeze(1)
+        self._features = self._features.view(self._features.size(0), -1)
+        self._features = torch.cat((self._features, one_hot_direction), dim=1)
+        obs = self._features
         return self._linear_layers(obs), state
 
     @override(TorchModelV2)
     def value_function(self) -> TensorType:
-        one_hot_direction = torch.nn.functional.one_hot(self.direction, self.num_of_directions).squeeze(1)
-        x = self._features.view(self._features.size(0), -1)
-        x = torch.cat((x, one_hot_direction), dim=1)
-        value = self._value_layer(x)
+        value = self._value_layer(self._features)
         return value.squeeze(1)
 
 
