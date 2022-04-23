@@ -1,15 +1,19 @@
-import pyglet
+try:
+    import pyglet
 
-pyglet.window.Window()
-from pyglet.window import key
+    pyglet.window.Window()
+    from pyglet.window import key
+except Exception:
+    pass
 
 import logging
 import sys
 import random
 import numpy as np
-
-from gym_duckietown.simulator import Simulator, DEFAULT_ROBOT_SPEED, DEFAULT_CAMERA_WIDTH, DEFAULT_CAMERA_HEIGHT
-
+try:
+    from gym_duckietown.simulator import Simulator, DEFAULT_ROBOT_SPEED, DEFAULT_CAMERA_WIDTH, DEFAULT_CAMERA_HEIGHT
+except Exception:
+    pass
 from .wrappers.general_wrappers import InconvenientSpawnFixingWrapper
 from .wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, SegmentationWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper, RGB2GrayscaleWrapper, LastPictureObsWrapper
 from .wrappers.reward_wrappers import DtRewardTargetOrientation, DtRewardVelocity, DtRewardCollisionAvoidance, DtRewardPosingLaneWrapper, DtRewardPosAngle
