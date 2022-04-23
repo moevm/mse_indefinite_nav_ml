@@ -8,6 +8,7 @@ __copyright__ = "Copyright (c) 2020 András Kalapos"
 
 import gym
 import numpy as np
+from gym_duckietown import simulator
 from numpy import sign, sin, cos, tan
 from random import randint as ri
 import logging
@@ -478,7 +479,7 @@ class TileWrapper(gym.Wrapper):
         v_cr = self._cr_vectors[self._cr_dirs[cr_dir]]
         index = int(np.dot(v_bot, v_cr)) + 1
         return [ self._dirs[i] for i in self._moves[nkind][index] ]
-    
+
     def step(self, action: np.ndarray) -> tuple:
         obs, reward, done, info = super(TileWrapper, self).step(action)
         
@@ -494,5 +495,13 @@ class TileWrapper(gym.Wrapper):
             self._tile = cur_tile
         
         info["direction"] = self._state
+
+        curve_point, curve_tangent = self.env.unwrapped.closest_curve_point(info["Simulator"]["cur_pos"], info["Simulator"]["cur_angle"])
+        x1, y1, z1 = info["Simulator"]["cur_pos"]
+        x2, y2, z2 = curve_point
+        dist = ((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)**0.5
+
+        reward = dist
+
         return obs, reward, done, info
-        
+
