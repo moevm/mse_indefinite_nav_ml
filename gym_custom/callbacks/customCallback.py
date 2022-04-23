@@ -1,4 +1,5 @@
 from typing import Dict, Optional
+from types import FunctionType
 from ray.rllib import RolloutWorker, Policy, BaseEnv, SampleBatch
 from ray.rllib.utils.typing import PolicyID, TensorType
 from ray.rllib.evaluation.episode import Episode
@@ -25,23 +26,17 @@ class CustomCallback(DefaultCallbacks):
                        **kwargs) -> None:
 
         env = worker.env_creator(copy.deepcopy(worker.env_context))
-        model = worker.get_policy().model
-        print(type(model))
-        pprint(model.__dir__)
-        #exit(0)
+        policy = policies['default_policy']
         env.reset()
         obs, reward, done, info = env.step((0, 0))
-        print("on_episode_end")
-        print("on_episode_end")
-        print("on_episode_end")
-        print("on_episode_end")
-        print("on_episode_end")
         for i in range(10):
             while not done:
-                print(worker.io_context.log_dir)
-                input_dict = {"obs": torch.Tensor(obs).to("cpu")}
-                state = []
-                action = model.forward(input_dict, state, [])
+                input_dict = {"obs": [obs]}
+                action = policy.compute_actions_from_input_dict(input_dict)
+                action = action[2]['action_dist_inputs']
+                action = (action[0][0], action[0][1])
+                print(action)
                 obs, reward, done, info = env.step(action)
-                img = image.fromarray(np.uint8(obs)).convert("RGB")
+                img = Image.fromarray(np.uint8(env.render())).convert("RGB")
                 img.save(f"{worker.io_context.log_dir}/test.png")
+                exit(1)
