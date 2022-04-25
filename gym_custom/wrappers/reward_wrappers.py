@@ -336,4 +336,4 @@ class DtRewardBezieWrapper(gym.RewardWrapper):
 
         reward = dist*tangent
 
-        return observation, self.reward(reward), done, info
+        return observation, reward, done, info
