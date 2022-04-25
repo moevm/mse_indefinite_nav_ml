@@ -408,7 +408,7 @@ class PrepareLearningWrapper(gym.Wrapper):
     def reset(self):
         return {
             "direction": 0,
-            "view": np.zeros((self.c, self.h, self.w), dtype=np.float32)
+            "view": self.env.reset()
         }
 
     def step(self, action):
