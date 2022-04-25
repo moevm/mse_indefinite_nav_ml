@@ -418,38 +418,59 @@ class PrepareLearningWrapper(gym.Wrapper):
 
 class TileWrapper(gym.Wrapper):
     def __init__(self, env):
-        super(TileWrapper, self).__init__(env)
-
-    def gettile(self, tile_coords: list):
+       super(TileWrapper, self).__init__(env)
+       
+       self._cr_dirs = {
+           "N": [0, -1],
+           "E": [1, 0],
+           "S": [0, 1],
+           "W": [-1, 0]
+           }
+       
+       self._directions = {
+           "laneFollowing": 0,
+           "left": 1,
+           "forward": 2,
+           "right": 3
+           }
+       
+       self._moves = {
+           "curve_left": ["laneFollowing"],
+           "straight": ["laneFollowing"],
+           "4way": ["left", "forward", "right"],
+           "3way_left": [ ["forward", "right"], ["left", "right"], ["left", "forward"] ]
+           }
+    
+    def gettile(self, tile_coords:list):
         return self.env.unwrapped._get_tile(tile_coords[0], tile_coords[1])
-
-    def next_tile(self, tc: list, pos: list, phi: float):
-        cons_next = []  # Рассматриваемые тайлы
+        
+    def next_tile(self, tc:list, pos:list, phi:float):
+        cons_next = []	# Рассматриваемые тайлы
         crossroads = ['3way_left', '4way']
-
+        
         dx = sign(cos(phi))
         dy = -sign(sin(phi))
         atphi = abs(tan(phi))
-
+        
         tcx = tc[0] + dx
         tcy = tc[1] + dy
-
-        if dy == 0 or dx == 0:  # Если взгляд перпендикулярен тайлу
-            cons_next.append([tcx, tcy])
-        else:  # Сравнение углов, чтобы выбрать нужный тайл
+        
+        if dy == 0 or dx == 0: # Если взгляд перпендикулярен тайлу
+            cons_next.append( [tcx, tcy] )
+        else:	# Сравнение углов, чтобы выбрать нужный тайл
             # Соотношение сторон прямоугольника, в который попадает луч взгляда
-            tga = (-dx * (tc[1] + int(dy > 0)) + dx * pos[2]) \
-                  / (dx * (tc[0] + int(dx > 0)) - dx * pos[0])
-
+            tga = ( -dx*(tc[1] + int(dy > 0)) + dx*pos[2] )\
+            / ( dx*(tc[0] + int(dx > 0)) -dx*pos[0] )
+            
             if atphi < abs(tga):
-                cons_next.append([tcx, tc[1]])
+                cons_next.append( [tcx, tc[1]] )
             elif atphi > abs(tga):
-                cons_next.append([tc[0], tcy])
+                cons_next.append( [tc[0], tcy] )
             else:
                 if atphi <= 1:
-                    cons_next.append([tcx, tc[1]])
+                    cons_next.append( [tcx, tc[1]] )
                 if atphi >= 1:
-                    cons_next.append([tc[0], tcy])
+                    cons_next.append( [tc[0], tcy] )
         # Проверка тайлов на принадлежность перекрёсткам и выбор из двух тайлов (в случае неопределённости направления взгляда)
         tile1 = self.gettile(cons_next[0])
         if len(cons_next) == 1 and tile1 and tile1['kind'] in crossroads:
@@ -457,17 +478,26 @@ class TileWrapper(gym.Wrapper):
         if len(cons_next) > 1:
             tile2 = self.gettile(cons_next[1])
             if tile1 and tile1['kind'] in crossroads and tile2 and tile2['kind'] in crossroads:
-                return self.gettile(cons_next[ri(0, 1)])['kind']
+                return self.gettile(cons_next[ri(0,1)])['kind']
             if tile1 and tile1['kind'] in crossroads:
                 return tile1['kind']
             if tile2 and tile2['kind'] in crossroads:
                 return tile2['kind']
             return None
         return None
-
+    
+    def directions(ppos: list, npos: list, nkind: str, cr_dir: str) -> list:
+        if nkind != "3way_left":
+            if nkind in R.keys():
+                return [ self._directions[i] for i in self._moves[nkind] ]
+            return []
+        
+        v_bot = [ npos[0] - ppos[0], npos[1] - ppos[1] ]
+        v_cr = self._cr_dirs[cr_dir]
+        index = int(np.dot(v_bot, v_cr)) + 1
+        return [ self._directions[i] for i in self._moves[nkind][index] ]
+    
     def step(self, action: np.ndarray) -> tuple:
         obs, reward, done, info = super(TileWrapper, self).step(action)
-        info["Simulator"]["next_crossroad"] = self.next_tile(info["Simulator"]["tile_coords"],
-                                                             info["Simulator"]["cur_pos"],
-                                                             info["Simulator"]["cur_angle"])
+        info["Simulator"]["next_crossroad"] = self.next_tile(info["Simulator"]["tile_coords"], info["Simulator"]["cur_pos"], info["Simulator"]["cur_angle"])
         return obs, reward, done, info
