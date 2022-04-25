@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 import seaborn
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.stats import norm
+from gym_duckietown import simulator
 
 logger = logging.getLogger(__name__)
 
@@ -314,3 +315,25 @@ class DtRewardPosingLaneWrapper(gym.RewardWrapper):
             pass
         return reward
 
+
+class DtRewardBezieWrapper(gym.RewardWrapper):
+    def __init__(self, env):
+        if env is not None:
+            super(DtRewardBezieWrapper, self).__init__(env)
+
+    def step(self, action):
+        observation, reward, done, info = self.env.step(action)
+
+        cps = info["Simulator"]["bezie"]
+
+        t = simulator.bezier_closest(cps, info["Simulator"]["cur_pos"])
+        point = simulator.bezier_point(cps, t)
+        tangent = simulator.bezier_tangent(cps, t)
+
+        x1, y1, z1 = info["Simulator"]["cur_pos"]
+        x2, y2, z2 = point
+        dist = ((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2) ** 0.5
+
+        reward = dist*tangent
+
+        return observation, self.reward(reward), done, info
