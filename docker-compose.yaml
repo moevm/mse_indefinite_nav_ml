@@ -4,7 +4,7 @@ services:
   ray-trainer:
     build: ./
     container_name: mse-ray-trainer
-    network_mode: "host"
+    #network_mode: "host"
     volumes:
       - ray_data:/root/ray_results
 
