@@ -12,7 +12,7 @@ from gym_duckietown.simulator import Simulator, DEFAULT_ROBOT_SPEED, DEFAULT_CAM
 
 from .wrappers.general_wrappers import InconvenientSpawnFixingWrapper
 from .wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, SegmentationWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper, RGB2GrayscaleWrapper, LastPictureObsWrapper
-from .wrappers.reward_wrappers import DtRewardTargetOrientation, DtRewardVelocity, DtRewardCollisionAvoidance, DtRewardPosingLaneWrapper, DtRewardPosAngle
+from .wrappers.reward_wrappers import DtRewardTargetOrientation, DtRewardVelocity, DtRewardCollisionAvoidance, DtRewardPosingLaneWrapper, DtRewardPosAngle, DtRewardBezieWrapper
 from .wrappers.action_wpappers import Heading2WheelVelsWrapper, ActionSmoothingWrapper
 from .wrappers.envWrapper import ActionDelayWrapper, ForwardObstacleSpawnnigWrapper, ObstacleSpawningWrapper, TileWrapper
 from .wrappers.aido_wrapper import AIDOWrapper
@@ -60,6 +60,7 @@ class Environment:
         #self._env = DtRewardVelocity(self._env)
         #self._env = DtRewardCollisionAvoidance(self._env)
         self._env = TileWrapper(self._env)
+        self._env = DtRewardBezieWrapper(self._env)
 
 
 

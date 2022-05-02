@@ -5,6 +5,7 @@ import numpy as np
 from gym_duckietown.simulator import NotInLane
 from matplotlib import pyplot as plt
 import seaborn
+from gym_duckietown import simulator
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.stats import norm
 
@@ -314,3 +315,30 @@ class DtRewardPosingLaneWrapper(gym.RewardWrapper):
             pass
         return reward
 
+
+class DtRewardBezieWrapper(gym.RewardWrapper):
+    def __init__(self, env):
+        if env is not None:
+            super(DtRewardBezieWrapper, self).__init__(env)
+
+    def step(self, action):
+        observation, reward, done, info = self.env.step(action)
+
+        curves = self.env.unwrapped._get_tile(info["Simulator"]["tile_coords"][0],
+                                              info["Simulator"]["tile_coords"][1])["curves"]
+        reward = 0
+
+        curve_index = info["curve_index"]
+        if curve_index:
+            cps = curves[curve_index]
+
+            t = simulator.bezier_closest(cps, info["Simulator"]["cur_pos"])
+            point = simulator.bezier_point(cps, t)
+            tangent = simulator.bezier_tangent(cps, t)
+
+            x1, y1, z1 = info["Simulator"]["cur_pos"]
+            x2, y2, z2 = point
+            dist = ((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2) ** 0.5
+
+            reward = dist*tangent[0]
+        return observation, reward, done, info
