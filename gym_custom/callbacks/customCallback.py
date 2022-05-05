@@ -78,7 +78,9 @@ class AgentTestRecordCallback(DefaultCallbacks):
                 done = False
                 continue
 
-            input_dict = {"obs": [obs]}
+            obs['view'] = np.expand_dims(obs['view'], 0)
+            obs['direction'] = np.expand_dims(np.array(obs['direction'], dtype=np.int64), 0)
+            input_dict = {"obs": obs}
             action = policy.compute_actions_from_input_dict(input_dict)
             action = action[2]['action_dist_inputs']
             action = (action[0][0], action[0][1])

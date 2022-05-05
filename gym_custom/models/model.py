@@ -40,7 +40,6 @@ class CustomModel(TorchModelV2, nn.Module):
         for i in conf["value"]:
             layers.append(Linear(i["in"], i["out"], i["pool"]))
         self._value_layer = nn.Sequential(*layers)
-        self.direction = None
         self.num_of_directions = 4
 
     @override(TorchModelV2)
@@ -48,19 +47,21 @@ class CustomModel(TorchModelV2, nn.Module):
                 state: List[TensorType],
                 seq_lens: TensorType) -> (TensorType, List[TensorType]):
 
-        obs = input_dict["obs_flat"]
-        if type(obs['view']) != torch.Tensor:
+        obs = input_dict["obs"]
+        if not isinstance(obs['view'], torch.Tensor):
             obs['view'] = torch.from_numpy(obs['view']).to(self.device)
             obs['direction'] = torch.from_numpy(obs['direction']).to(self.device)
-        self.direction = obs['direction']
-        obs = obs["view"]
-        self._features = self._hidden_layers(obs)
-        obs = self._features
-        one_hot_direction = torch.nn.functional.one_hot(self.direction, self.num_of_directions).squeeze(1)
-        self._features = self._features.view(self._features.size(0), -1)
-        self._features = torch.cat((self._features, one_hot_direction), dim=1)
-        obs = self._features
-        return self._linear_layers(obs), state
+
+        direction = obs['direction'].to(torch.int64)
+        x = obs["view"]
+        x = self._hidden_layers(x)
+        one_hot_direction = torch.nn.functional.one_hot(direction, self.num_of_directions)
+        x = x.view(x.size(0), -1)
+        x = torch.cat((x, one_hot_direction), dim=1)
+
+        self._features = x
+
+        return self._linear_layers(x), state
 
     @override(TorchModelV2)
     def value_function(self) -> TensorType:

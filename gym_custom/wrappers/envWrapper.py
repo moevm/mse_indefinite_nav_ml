@@ -6,13 +6,14 @@ Most of these were implemented for Gym-Duckietown version 5.0.16
 __license__ = "MIT"
 __copyright__ = "Copyright (c) 2020 András Kalapos"
 
+import logging
+from random import randint as ri
+
 import gym
 import numpy as np
-from numpy import sign, sin, cos, tan
-from random import randint as ri
-import logging
-from gym_duckietown.simulator import Simulator
 from gym import spaces
+from gym_duckietown.simulator import Simulator
+from numpy import sign, sin, cos, tan
 
 logger = logging.getLogger(__name__)
 
@@ -408,76 +409,82 @@ class PrepareLearningWrapper(gym.Wrapper):
     def reset(self):
         return {
             "direction": 0,
-            "view": self.env.reset()
+            "view": self.env.reset().astype(np.float32)
         }
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
-        return {"direction": info["direction"], "view": obs}, reward, done, info
+        return {"direction": info["direction"], "view": obs.astype(np.float32)}, reward, done, info
 
 
 class TileWrapper(gym.Wrapper):
     def __init__(self, env):
-       super(TileWrapper, self).__init__(env)
-       
-       self._tile = None
-       self._state = None
-       self._curve = None
-       
-       self._curve_dicts = [{0:5, 1:1}, {-1:2, 1:0}, {-1:4, 0:3}]
-       
-       self._cr_dirs = ["south", "east", "north", "west"]
-       self._cr_vectors = {
-           "south": [0, 1],
-           "east": [1, 0],
-           "north": [0, -1],
-           "west": [-1, 0]
-           }
-       
-       self._dirs = {
-           "laneFollowing": 0,
-           "left": 1,
-           "forward": 2,
-           "right": 3
-           }
-       
-       self._moves = {
-           "curve_left": ["laneFollowing"],
-           "straight": ["laneFollowing"],
-           "4way": ["left", "forward", "right"],
-           "3way_left": [ ["forward", "right"], ["left", "right"], ["left", "forward"] ]
-           }
-    
-    def _gettile(self, tile_coords:list):
+        super(TileWrapper, self).__init__(env)
+
+        self._tile = None
+        self._state = None
+        self._curve = 0
+        self._direction = None
+
+        self._curve_dicts_3way = [{0: 5, 1: 1}, {-1: 2, 1: 0}, {-1: 4, 0: 3}]
+        self._curve_dicts_4way = [{0: 5, 1: 1, -1: 0}, {-1: 2, 1: 0, 0: 0}, {-1: 4, 0: 3, 1: 0}]
+
+        self._cr_dirs = ["south", "east", "north", "west"]
+        self._cr_vectors = {
+            "south": [0, 1],
+            "east": [1, 0],
+            "north": [0, -1],
+            "west": [-1, 0]
+        }
+
+        self._dirs = {
+            "laneFollowing": 0,
+            "left": 1,
+            "forward": 2,
+            "right": 3
+        }
+
+        self._moves = {
+            "curve_left": ["laneFollowing"],
+            "straight": ["laneFollowing"],
+            "4way": ["left", "forward", "right"],
+            "3way_left": [["forward", "right"], ["left", "right"], ["left", "forward"]]
+        }
+
+        # self.env.unwrapped.closest_curve_point = self._get_chosen_curve
+
+        self.env.unwrapped._get_curve_points = self._get_pts
+
+    def _gettile(self, tile_coords: list):
         return self.env.unwrapped._get_tile(tile_coords[0], tile_coords[1])
-        
-    def _next_crossroad(self, tc:list, pos:list, phi:float):
-        cons_next = []	# Рассматриваемые тайлы
+
+    def _next_crossroad(self, tc: list, pos: list, phi: float):
+        cons_next = []  # Рассматриваемые тайлы
         crossroads = ['3way_left', '4way']
-        
+
         dx = sign(cos(phi))
         dy = -sign(sin(phi))
         atphi = abs(tan(phi))
-        
+
         tcx = tc[0] + dx
         tcy = tc[1] + dy
-        
-        if dy == 0 or dx == 0: # Если взгляд перпендикулярен тайлу
-            cons_next.append( [tcx, tcy] )
-        else:	# Сравнение углов, чтобы выбрать нужный тайл
+
+        if dy == 0 or dx == 0:  # Если взгляд перпендикулярен тайлу
+            cons_next.append([tcx, tcy])
+        else:  # Сравнение углов, чтобы выбрать нужный тайл
             # Соотношение сторон прямоугольника, в который попадает луч взгляда
-            tga = ( -dx*(tc[1] + int(dy > 0)) + dx*pos[2] )\
-            / ( dx*(tc[0] + int(dx > 0)) -dx*pos[0] )
-            
+            tga = (-dx * (tc[1] + int(dy > 0)) + dx * pos[2]) \
+                  / (dx * (tc[0] + int(dx > 0)) - dx * pos[0])
+
             if atphi < abs(tga):
-                cons_next.append( [tcx, tc[1]] )
+                cons_next.append([tcx, tc[1]])
             elif atphi > abs(tga):
-                cons_next.append( [tc[0], tcy] )
+                cons_next.append([tc[0], tcy])
             else:
                 if atphi <= 1:
-                    cons_next.append( [tcx, tc[1]] )
+                    cons_next.append([tcx, tc[1]])
                 if atphi >= 1:
-                    cons_next.append( [tc[0], tcy] )
+                    cons_next.append([tc[0], tcy])
         # Проверка тайлов на принадлежность перекрёсткам и выбор из двух тайлов (в случае неопределённости направления взгляда)
         tile1 = self._gettile(cons_next[0])
         if len(cons_next) == 1 and tile1 and tile1['kind'] in crossroads:
@@ -485,34 +492,34 @@ class TileWrapper(gym.Wrapper):
         if len(cons_next) > 1:
             tile2 = self._gettile(cons_next[1])
             if tile1 and tile1['kind'] in crossroads and tile2 and tile2['kind'] in crossroads:
-                return self._gettile(cons_next[ri(0,1)])['kind']
+                return self._gettile(cons_next[ri(0, 1)])['kind']
             if tile1 and tile1['kind'] in crossroads:
                 return tile1['kind']
             if tile2 and tile2['kind'] in crossroads:
                 return tile2['kind']
             return None
         return None
-    
+
     def _directions(self, ppos: list, npos: list, nkind: str, cr_dir: int) -> list:
         if nkind != "3way_left":
             if nkind in self._moves.keys():
-                return [ self._dirs[i] for i in self._moves[nkind] ]
+                return [(self._dirs[i], i) for i in self._moves[nkind]]
             return []
-        
-        v_bot = [ npos[0] - ppos[0], npos[1] - ppos[1] ]
+
+        v_bot = [npos[0] - ppos[0], npos[1] - ppos[1]]
         if np.linalg.norm(v_bot) != 1:
-            return [0]
+            return [(0, 'laneFollowing')]
         v_cr = self._cr_vectors[self._cr_dirs[cr_dir]]
         index = int(np.dot(v_bot, v_cr)) + 1
         print("vecs: ", v_bot, v_cr)
         print("dot: ", np.dot(v_bot, v_cr))
-        return [ self._dirs[i] for i in self._moves[nkind][index] ]
-    
+        return [(self._dirs[i], i) for i in self._moves[nkind][index]]
+
     def _curve_index(self, ppos: list, npos: list, nkind: str, cr_dir: int):
         state = self._state
         curve = 0
         if state != None:
-            v_bot = [ npos[0] - ppos[0], npos[1] - ppos[1] ]
+            v_bot = [npos[0] - ppos[0], npos[1] - ppos[1]]
             v_cr = self._cr_vectors[self._cr_dirs[cr_dir]]
             dot = int(np.dot(v_bot, v_cr))
             if state == 0 and dot != 1:
@@ -521,27 +528,58 @@ class TileWrapper(gym.Wrapper):
                 index = state - 1
                 if nkind == "3way_left":
                     print("curveind: ", index)
-                    curve = self._curve_dicts[index][dot]
-                else:
-                    curve = index
+                    curve = self._curve_dicts_3way[index][dot]
+                elif nkind == "4way_left":
+                    curve = self._curve_dicts_4way[index][dot]
         return curve
-    
+
+    def _get_chosen_curve(self, pos, angle):
+        i, j = self.env.unwrapped.get_grid_coords(pos)
+        tile = self.env.unwrapped._get_tile(i, j)
+
+        if tile is None or not tile["drivable"]:
+            return None, None
+
+        # Find curve with largest dotproduct with heading
+        curves = tile["curves"]
+        cps = curves[self._curve]
+
+        from gym_duckietown import simulator
+
+        t = simulator.bezier_closest(cps, pos)
+        point = simulator.bezier_point(cps, t)
+        tangent = simulator.bezier_tangent(cps, t)
+
+        return point, tangent
+
+    def _get_pts(self, curves, angle):
+        return curves[self._curve]
+
     def step(self, action: np.ndarray) -> tuple:
         obs, reward, done, info = super(TileWrapper, self).step(action)
-        
-        info["Simulator"]["next_crossroad"] = self._next_crossroad(info["Simulator"]["tile_coords"], info["Simulator"]["cur_pos"], info["Simulator"]["cur_angle"])
-        
-        cur_tile = self._gettile(info["Simulator"]["tile_coords"])
+
+        cur_info = self.env.unwrapped.get_agent_info()
+
+        next_crossroad = self._next_crossroad(cur_info["Simulator"]["tile_coords"],
+                                              cur_info["Simulator"]["cur_pos"],
+                                              cur_info["Simulator"]["cur_angle"])
+
+        cur_tile = self._gettile(cur_info["Simulator"]["tile_coords"])
         if not self._tile:
             self._state = 0
             self._tile = cur_tile
+            self._direction = 'laneFollowing'
         elif self._tile is not cur_tile:
             ppos, npos, nkind, cr_dir = self._tile["coords"], cur_tile["coords"], cur_tile["kind"], cur_tile["angle"]
             directions = self._directions(ppos, npos, nkind, cr_dir)
-            self._state = directions[ri(0, len(directions) - 1)]
+            chosen_direction_idx, self._direction = directions[ri(0, len(directions) - 1)]
+            self._state = chosen_direction_idx
             self._curve = self._curve_index(ppos, npos, nkind, cr_dir)
             self._tile = cur_tile
-        
+
+
+        info["Simulator"]["next_crossroad"] = next_crossroad
+        info["direction_name"] = self._direction
         info["direction"] = self._state
         info["curve_index"] = self._curve
         return obs, reward, done, info

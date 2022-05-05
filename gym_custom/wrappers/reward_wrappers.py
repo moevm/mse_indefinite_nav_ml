@@ -321,6 +321,9 @@ class DtRewardBezieWrapper(gym.RewardWrapper):
         if env is not None:
             super(DtRewardBezieWrapper, self).__init__(env)
 
+    def _compute_dist_reward(self):
+        pass
+
     def step(self, action):
         observation, reward, done, info = self.env.step(action)
 

@@ -1,3 +1,8 @@
+
+import pyglet
+pyglet.window.Window()
+from pyglet.window import key
+
 import logging
 import sys
 import random
@@ -22,7 +27,7 @@ class Environment:
         np.random.seed(seed)
         random.seed(seed)
 
-    def create_env(self, env_config, env_id=0) -> Simulator:
+    def create_env(self, env_config, wrap: bool = True, env_id=0) -> Simulator:
         self._env = Simulator(
             seed=env_config["seed"],
             map_name=env_config["map_name"],
@@ -34,7 +39,8 @@ class Environment:
             distortion=env_config["distortion"],
             domain_rand=env_config["domain_rand"],
         )
-        self._wrap()
+        if wrap:
+            self._wrap()
         return self._env
 
     def _wrap(self) -> None:
@@ -54,7 +60,7 @@ class Environment:
         #self._env = DtRewardVelocity(self._env)
         #self._env = DtRewardCollisionAvoidance(self._env)
         self._env = TileWrapper(self._env)
-        self._env = DtRewardBezieWrapper(self._env)
+        #self._env = DtRewardBezieWrapper(self._env)
         self._env = PrepareLearningWrapper(self._env)
 
 
