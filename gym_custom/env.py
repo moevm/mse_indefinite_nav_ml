@@ -1,22 +1,15 @@
-import pyglet
-
-pyglet.window.Window()
-from pyglet.window import key
-
 import logging
 import sys
 import random
 import numpy as np
 
 from gym_duckietown.simulator import Simulator, DEFAULT_ROBOT_SPEED, DEFAULT_CAMERA_WIDTH, DEFAULT_CAMERA_HEIGHT
-
 from .wrappers.general_wrappers import InconvenientSpawnFixingWrapper
-from .wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, SegmentationWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper, RGB2GrayscaleWrapper, LastPictureObsWrapper
-from .wrappers.reward_wrappers import DtRewardTargetOrientation, DtRewardVelocity, DtRewardCollisionAvoidance, DtRewardPosingLaneWrapper, DtRewardPosAngle
+from .wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, SegmentationWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper, RGB2GrayscaleWrapper, LastPictureObsWrapper, ReshapeWrapper
+from .wrappers.reward_wrappers import DtRewardTargetOrientation, DtRewardVelocity, DtRewardCollisionAvoidance, DtRewardPosingLaneWrapper, DtRewardPosAngle, DtRewardBezieWrapper
 from .wrappers.action_wpappers import Heading2WheelVelsWrapper, ActionSmoothingWrapper
-from .wrappers.envWrapper import ActionDelayWrapper, ForwardObstacleSpawnnigWrapper, ObstacleSpawningWrapper, TileWrapper
+from .wrappers.envWrapper import ActionDelayWrapper, ForwardObstacleSpawnnigWrapper, ObstacleSpawningWrapper, PrepareLearningWrapper, TileWrapper
 from .wrappers.aido_wrapper import AIDOWrapper
-
 from ray.tune import register_env
 
 
@@ -49,17 +42,21 @@ class Environment:
         #self._env = ActionDelayWrapper(self._env)
         self._env = ClipImageWrapper(self._env, 3)
         #self._env = RGB2GrayscaleWrapper(self._env)
-        self._env = ResizeWrapper(self._env, (84, 84))
+        self._env = ResizeWrapper(self._env, (64, 64))
         #self._env = RandomFrameRepeatingWrapper(self._env)
         #self._env = ObservationBufferWrapper(self._env)
         self._env = MotionBlurWrapper(self._env)
         self._env = NormalizeWrapper(self._env)
+        self._env = ReshapeWrapper(self._env)
         self._env = Heading2WheelVelsWrapper(self._env)
         #self._env = ActionSmoothingWrapper(self._env)
         #self._env = DtRewardTargetOrientation(self._env)
         #self._env = DtRewardVelocity(self._env)
         #self._env = DtRewardCollisionAvoidance(self._env)
         self._env = TileWrapper(self._env)
+        self._env = DtRewardBezieWrapper(self._env)
+        self._env = PrepareLearningWrapper(self._env)
+
 
 
 

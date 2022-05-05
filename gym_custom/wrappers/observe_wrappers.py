@@ -80,6 +80,20 @@ class NormalizeWrapper(gym.ObservationWrapper):
             return (obs - self.obs_lo) / (self.obs_hi - self.obs_lo)
 
 
+class ReshapeWrapper(gym.ObservationWrapper):
+    def __init__(self, env=None):
+        super(ReshapeWrapper, self).__init__(env)
+        self.obs_lo = self.observation_space.low[0, 0, 0]
+        self.obs_hi = self.observation_space.high[0, 0, 0]
+        h, w, c = self.observation_space.shape
+        self.observation_space = spaces.Box(0.0, 1.0, (c, h, w), dtype=np.float32)
+
+    def observation(self, obs):
+        h, w, c = obs.shape
+        obs = obs.reshape(c, h, w)
+        return obs
+
+
 class ChannelsLast2ChannelsFirstWrapper(gym.ObservationWrapper):
     def __init__(self, env=None):
         super(ChannelsLast2ChannelsFirstWrapper, self).__init__(env)

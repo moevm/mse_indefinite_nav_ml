@@ -8,4 +8,5 @@ torchvision==0.8.1
 gym==0.22.0
 addict
 yapf
-
+dm_tree
+scikit-image
