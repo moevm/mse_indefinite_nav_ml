@@ -451,7 +451,7 @@ class TileWrapper(gym.Wrapper):
             "3way_left": [["forward", "right"], ["left", "right"], ["left", "forward"]]
         }
 
-        # self.env.unwrapped.closest_curve_point = self._get_chosen_curve
+        self.env.unwrapped.closest_curve_point = self._get_chosen_curve
 
         self.env.unwrapped._get_curve_points = self._get_pts
 
@@ -522,6 +522,7 @@ class TileWrapper(gym.Wrapper):
             v_bot = [npos[0] - ppos[0], npos[1] - ppos[1]]
             v_cr = self._cr_vectors[self._cr_dirs[cr_dir]]
             dot = int(np.dot(v_bot, v_cr))
+            print('dot: ', dot, np.dot(v_bot, v_cr))
             if state == 0 and dot != 1:
                 curve = 1
             elif state != 0:

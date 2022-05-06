@@ -10,18 +10,19 @@ import numpy as np
 import pyglet
 from pyglet.window import key
 
+
 sys.path.append(osp.abspath('.'))
 from gym_duckietown.envs import DuckietownEnv
 from gym_custom.wrappers.envWrapper import TileWrapper
-from gym_custom.wrappers.reward_wrappers import DtRewardBezieWrapper
 
 STEP = 0
 
 from gym_custom.utils.config import Config
+from gym_custom.wrappers.debug_simulator import Simulator2
 
 conf = Config.fromfile('./configs/conf.py')
 conf['env_config']['draw_curve'] = True
-env = DuckietownEnv(**conf['env_config'])
+env = Simulator2(**conf['env_config'])
 env = TileWrapper(env)
 # env = DtRewardBezieWrapper(env)
 
