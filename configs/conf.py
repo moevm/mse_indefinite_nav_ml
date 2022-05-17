@@ -84,7 +84,7 @@ ray_sys_conf = {
 
 env_config = {
     "seed": random.randint(0, 100000),
-    "map_name": "C:/users/green/mse_indefinite_nav_ml/maps/crossroads",  # use abs path
+    "map_name": "crossroads",
     "max_steps": 5000,
     "camera_width": 640,
     "camera_height": 480,

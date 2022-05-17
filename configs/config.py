@@ -1,8 +1,14 @@
 import multiprocessing
 import torch
 import random
+from gym_custom.callbacks.customCallback import get_record_progress_callback
+from gym_custom.wrappers.observe_wrappers import ResizeWrapper, NormalizeWrapper, ClipImageWrapper, MotionBlurWrapper, \
+    ReshapeWrapper, RandomFrameRepeatingWrapper, ObservationBufferWrapper
+from gym_custom.wrappers.action_wpappers import Heading2WheelVelsWrapper
+from gym_custom.wrappers.envWrapper import PrepareLearningWrapper, TileWrapper
 
 ENV_NAME = 'Duckietown'
+
 ray_init_config = {
     "num_cpus": 5,
     "num_gpus": torch.cuda.device_count(),
@@ -89,5 +95,51 @@ env_config = {
     "distortion": True,
     "domain_rand": False
 }
+
+
+def train_env_wrapping(env):
+    env = ClipImageWrapper(env, 3)
+    env = ResizeWrapper(env, (64, 64))
+    env = RandomFrameRepeatingWrapper(env)
+    env = ObservationBufferWrapper(env)
+    env = MotionBlurWrapper(env)
+    env = NormalizeWrapper(env)
+    env = ReshapeWrapper(env)
+    env = Heading2WheelVelsWrapper(env)
+    env = TileWrapper(env)
+    env = PrepareLearningWrapper(env)
+    return env
+
+
+def run_env_wrapping(env):
+    env = ClipImageWrapper(env, 3)
+    env = ResizeWrapper(env, (64, 64))
+    env = MotionBlurWrapper(env)
+    env = NormalizeWrapper(env)
+    env = ReshapeWrapper(env)
+    env = Heading2WheelVelsWrapper(env)
+    env = TileWrapper(env)
+    env = PrepareLearningWrapper(env)
+    return env
+
+
+# config for train
+ray_train_init_config = ray_init_config.copy()
+ray_train_init_config["num_cpus"] = multiprocessing.cpu_count() - 4
+
+ray_train_sys_conf = ray_sys_conf.copy()
+ray_train_sys_conf["num_workers"] = multiprocessing.cpu_count() - 5
+ray_train_sys_conf["lr"] = 0.0001
+ray_train_sys_conf["callbacks"] = get_record_progress_callback(log_rate=10, duration=10, top_down=True)
+ray_train_sys_conf["train_batch_size"] = 1000
+
+train_env_config = env_config.copy()
+train_env_config["wrapping"] = train_env_wrapping
+
+# config for run
+ray_run_init_config = ray_init_config.copy()
+ray_run_sys_conf = ray_sys_conf.copy()
+run_env_config = env_config.copy()
+run_env_config["wrapping"] = run_env_wrapping
 
 checkpoint_path = "./checkpoint_58/checkpoint-58"

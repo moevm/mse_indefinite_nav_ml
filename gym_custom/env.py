@@ -40,28 +40,8 @@ class Environment:
             domain_rand=env_config["domain_rand"],
         )
         if wrap:
-            self._wrap()
+            self._env = env_config['wrapping'](self._env)
         return self._env
-
-    def _wrap(self) -> None:
-        #self._env = LastPictureObsWrapper(self._env)
-        #self._env = ActionDelayWrapper(self._env)
-        self._env = ClipImageWrapper(self._env, 3)
-        #self._env = RGB2GrayscaleWrapper(self._env)
-        self._env = ResizeWrapper(self._env, (64, 64))
-        #self._env = RandomFrameRepeatingWrapper(self._env)
-        #self._env = ObservationBufferWrapper(self._env)
-        self._env = MotionBlurWrapper(self._env)
-        self._env = NormalizeWrapper(self._env)
-        self._env = ReshapeWrapper(self._env)
-        self._env = Heading2WheelVelsWrapper(self._env)
-        #self._env = ActionSmoothingWrapper(self._env)
-        #self._env = DtRewardTargetOrientation(self._env)
-        #self._env = DtRewardVelocity(self._env)
-        #self._env = DtRewardCollisionAvoidance(self._env)
-        self._env = TileWrapper(self._env)
-        #self._env = DtRewardBezieWrapper(self._env)
-        self._env = PrepareLearningWrapper(self._env)
 
 
 
