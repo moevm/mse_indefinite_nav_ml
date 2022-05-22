@@ -17,6 +17,7 @@ from gym_custom.env import Environment
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parameters to ray trainer")
     parser.add_argument('--conf_path', type=str, default='./configs/config.py')
+    parser.add_argument('--checkpoint', type=str, default='./checkpoint_58/checkpoint-58')
     args = parser.parse_args()
 
     config = Config.fromfile(args.conf_path)
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     conf = update_conf(rllib_config)
     conf = add_env_conf(conf, config['run_env_config'])
     trainer = PPOTrainer(config=conf)
-    trainer.restore(checkpoint)
+    trainer.restore(args.checkpoint)
     env = env.create_env(env_config)
     for i in range(10):
         obs = env.reset()

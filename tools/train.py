@@ -18,7 +18,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = Config.fromfile(args.conf_path)
-    ray.init(**config['ray_trina_init_config'])
+    ray.init(**config['ray_train_init_config'])
 
     rllib_config = get_default_rllib_conf()
     rllib_config.update(config['ray_train_sys_conf'])

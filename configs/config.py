@@ -141,5 +141,3 @@ ray_run_init_config = ray_init_config.copy()
 ray_run_sys_conf = ray_sys_conf.copy()
 run_env_config = env_config.copy()
 run_env_config["wrapping"] = run_env_wrapping
-
-checkpoint_path = "./checkpoint_58/checkpoint-58"
