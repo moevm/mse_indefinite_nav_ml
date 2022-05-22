@@ -14,17 +14,17 @@ import gym_custom.env
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parameters to ray trainer")
-    parser.add_argument('--conf_path', type=str, default='../configs/conf.py')
+    parser.add_argument('--conf_path', type=str, default='./configs/config.py')
     args = parser.parse_args()
 
     config = Config.fromfile(args.conf_path)
-    ray.init(**config['ray_init_config'])
+    ray.init(**config['ray_train_init_config'])
 
     rllib_config = get_default_rllib_conf()
-    rllib_config.update(config['ray_sys_conf'])
+    rllib_config.update(config['ray_train_sys_conf'])
 
     conf = update_conf(rllib_config)
-    conf = add_env_conf(conf, config['env_config'])
+    conf = add_env_conf(conf, config['train_env_config'])
 
     metric = conf.get('metric', None)
     tune.run(

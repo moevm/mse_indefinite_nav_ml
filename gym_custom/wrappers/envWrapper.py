@@ -451,9 +451,9 @@ class TileWrapper(gym.Wrapper):
             "3way_left": [["forward", "right"], ["left", "right"], ["left", "forward"]]
         }
 
-        self.env.unwrapped.closest_curve_point = self._get_chosen_curve
+        #self.env.unwrapped.closest_curve_point = self._get_chosen_curve
 
-        self.env.unwrapped._get_curve_points = self._get_pts
+        #self.env.unwrapped._get_curve_points = self._get_pts
 
     def _gettile(self, tile_coords: list):
         return self.env.unwrapped._get_tile(tile_coords[0], tile_coords[1])
@@ -530,8 +530,8 @@ class TileWrapper(gym.Wrapper):
                 if nkind == "3way_left":
                     print("curveind: ", index)
                     curve = self._curve_dicts_3way[index][dot]
-                elif nkind == "4way_left":
-                    curve = self._curve_dicts_4way[index][dot]
+                elif nkind == "4way":
+                    curve = 3*(v_bot[0] if v_bot[1] == 0 else v_bot[1] - 1) + index
         return curve
 
     def _get_chosen_curve(self, pos, angle):
@@ -573,6 +573,7 @@ class TileWrapper(gym.Wrapper):
         elif self._tile is not cur_tile:
             ppos, npos, nkind, cr_dir = self._tile["coords"], cur_tile["coords"], cur_tile["kind"], cur_tile["angle"]
             directions = self._directions(ppos, npos, nkind, cr_dir)
+            print(f'directions = {directions}')
             chosen_direction_idx, self._direction = directions[ri(0, len(directions) - 1)]
             self._state = chosen_direction_idx
             self._curve = self._curve_index(ppos, npos, nkind, cr_dir)
