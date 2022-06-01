@@ -523,7 +523,7 @@ class TileWrapper(gym.Wrapper):
             v_cr = self._cr_vectors[self._cr_dirs[cr_dir]]
             dot = int(np.dot(v_bot, v_cr))
             print('dot: ', dot, np.dot(v_bot, v_cr))
-            if dot != 0 and dot != 1:
+            if dot != 0 and np.abs(dot) != 1:
                 return 0
             if state == 0 and dot != 1:
                 curve = 1
