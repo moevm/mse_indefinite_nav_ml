@@ -17,12 +17,11 @@ from gym_custom.env import Environment
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parameters to ray trainer")
     parser.add_argument('--conf_path', type=str, default='./configs/config.py')
-    parser.add_argument('--checkpoint', type=str, default='./checkpoint_58/checkpoint-58')
+    parser.add_argument('--checkpoint', type=str, default='./checkpoint_51/checkpoint-51')
     args = parser.parse_args()
 
     config = Config.fromfile(args.conf_path)
     env_config = config['run_env_config']
-    checkpoint = config['checkpoint_path']
     env = Environment(random.randint(0, 100000))
     register_env('Duckietown', env.create_env)
     ray.init(**config['ray_run_init_config'])
