@@ -326,14 +326,13 @@ class DtRewardBezieWrapper(gym.RewardWrapper):
 
     def step(self, action):
         observation, reward, done, info = self.env.step(action)
-
         curves = self.env.unwrapped._get_tile(info["Simulator"]["tile_coords"][0],
                                               info["Simulator"]["tile_coords"][1])["curves"]
         reward = 0
 
         curve_index = info["curve_index"]
         if curve_index:
-            cps = curves[curve_index]
+            cps = curves[int(curve_index)]
 
             t = simulator.bezier_closest(cps, info["Simulator"]["cur_pos"])
             point = simulator.bezier_point(cps, t)

@@ -451,9 +451,9 @@ class TileWrapper(gym.Wrapper):
             "3way_left": [["forward", "right"], ["left", "right"], ["left", "forward"]]
         }
 
-        self.env.unwrapped.closest_curve_point = self._get_chosen_curve
+        #self.env.unwrapped.closest_curve_point = self._get_chosen_curve
 
-        self.env.unwrapped._get_curve_points = self._get_pts
+        #self.env.unwrapped._get_curve_points = self._get_pts
 
     def _gettile(self, tile_coords: list):
         return self.env.unwrapped._get_tile(tile_coords[0], tile_coords[1])
@@ -520,6 +520,9 @@ class TileWrapper(gym.Wrapper):
         curve = 0
         if state != None:
             v_bot = [npos[0] - ppos[0], npos[1] - ppos[1]]
+            print(f"v_bot[0]={v_bot[0]}, v_bot[1]={v_bot[1]}")
+            v_bot = np.array(v_bot)/np.linalg.norm(np.array(v_bot))
+            v_bot = v_bot.tolist()
             v_cr = self._cr_vectors[self._cr_dirs[cr_dir]]
             dot = int(np.dot(v_bot, v_cr))
             print('dot: ', dot, np.dot(v_bot, v_cr))
@@ -530,8 +533,9 @@ class TileWrapper(gym.Wrapper):
                 if nkind == "3way_left":
                     print("curveind: ", index)
                     curve = self._curve_dicts_3way[index][dot]
-                elif nkind == "4way_left":
-                    curve = self._curve_dicts_4way[index][dot]
+                elif nkind == "4way":
+                    curve = 3*(v_bot[0] if v_bot[1] == 0 else v_bot[1] - 1) + index
+                    print(f"4way, ind: {index}, curve: {curve}, v_bot[0]:{v_bot[0]}, v_bot[1]: {v_bot[1]}")
         return curve
 
     def _get_chosen_curve(self, pos, angle):
@@ -573,10 +577,15 @@ class TileWrapper(gym.Wrapper):
         elif self._tile is not cur_tile:
             ppos, npos, nkind, cr_dir = self._tile["coords"], cur_tile["coords"], cur_tile["kind"], cur_tile["angle"]
             directions = self._directions(ppos, npos, nkind, cr_dir)
+            if len(directions) == 0:
+                directions = [(0, 'laneFollowing')]
+
+            print(f'directions = {directions}')
             chosen_direction_idx, self._direction = directions[ri(0, len(directions) - 1)]
             self._state = chosen_direction_idx
             self._curve = self._curve_index(ppos, npos, nkind, cr_dir)
             self._tile = cur_tile
+
 
 
         info["Simulator"]["next_crossroad"] = next_crossroad

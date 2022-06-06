@@ -14,7 +14,7 @@ import gym_custom.env
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parameters to ray trainer")
-    parser.add_argument('--conf_path', type=str, default='../configs/conf.py')
+    parser.add_argument('--conf_path', type=str, default='./configs/conf.py')
     args = parser.parse_args()
 
     config = Config.fromfile(args.conf_path)
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         keep_checkpoints_num=2,
         checkpoint_score_attr="episode_reward_mean",
         metric=metric,
-        callbacks=[FixedTrialProgressCallback(metric=metric)]
+        #callbacks=[FixedTrialProgressCallback(metric=metric)]
     )
 
 
